@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+
+<html>
+<style>
+* {
+<!--  box-sizing: border-box;-->
+}
+
+body {
+  margin: 0;
+  font-family: Arial;
+}
+
+.header {
+  text-align: center;
+  padding: 32px;
+}
+
+.rowf {
+  display: -ms-flexbox; /* IE10 */
+  display: flex;
+  -ms-flex-wrap: nowrap; /* IE10 */
+  flex-wrap: nowrap;
+  padding: 0 0px;
+<!--  max-height: {{max_width}};-->
+}
+
+/* Create four equal columns that sits next to each other */
+.column {
+  -ms-flex: {{max_width}}; /* IE10 */
+  flex: {{max_width}};
+  max-width: {{max_width}};
+  padding: 0 0px;
+  flex-wrap: nowrap;
+}
+
+.column img {
+display: block;
+  margin-top: 0px;
+<!--  vertical-align: middle;-->
+  width: 100%;
+}
+
+/* Responsive layout - makes a two column-layout instead of four columns */
+@media screen and (max-width: 400px) {
+  .column {
+    -ms-flex: 70%;
+    flex: 70%;
+    max-width: 70%;
+  }
+}
+
+/* Responsive layout - makes the two columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 600px) {
+  .column {
+    -ms-flex: 100%;
+    flex: 100%;
+    max-width: 100%;
+  }
+}
+
+
+
+
+
+
+
+</style>
+{% extends 'base.html' %}
+{% block title %}
+Grid
+{% endblock %}
+{% block content %}
+<!-- Header -->
+<div class="header">
+    <!--    header-->
+    <h1>Clickable Mosaic Grid</h1>
+    <p>Resize the browser window to see the responsive effect.</p>
+</div>
+
+<div align="center" style="padding:10px;margin:5%;width:90%;background-color: #414141;">
+    <div class="rowf" align="center" style="width:100%;background-image:url({{output_name}});
+  background-repeat: no-repeat;
+  background-size: 100%;">
+        {% for row in data%}
+        <div class="column">
+            {% for image in row%}
+            <a href={{url_for('image_page',n=image[1],l=image[2],m=image[3])}} target="_blank" style="opacity: 0%;">
+
+                <img src={{image[0]}} style="width:100%;opacity: 0%;">
+            </a>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endblock %}
+</html>
+
