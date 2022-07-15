@@ -2,7 +2,7 @@ import glob
 from PIL import Image
 from scipy import spatial
 import numpy as np
-import sys
+import pickle
 import os
 import random
 import matplotlib.pyplot as plt
@@ -26,20 +26,28 @@ def prepare_tiles(tile_photos_path, oj_tile_photos_path, tile_size):
     # Import and resize all tiles
     tiles = []
     paths = []
-    for path in tile_paths:
-        image_path = path.split('\\')[-1]
-        tile = Image.open(path)
-        tile = tile.resize(tile_size)
-        tile.save(oj_tile_photos_path + image_path)
-        tiles.append(tile)
-        paths.append(repr(oj_tile_photos_path + image_path))
-
-    # Calculate dominant color
     colors = []
-    for tile in tiles:
+    for path in tile_paths:
+        image_path = path.split('/')[-1].split('\\')[-1]
+        tile = Image.open(path)
+        tile_path = (oj_tile_photos_path + image_path).replace('\\','/')
+        tile = tile.resize(tile_size)
+
+        # Calculate dominant color
         mean_color = np.array(tile).mean(axis=0).mean(axis=0)
         if mean_color.shape == (3,):
             colors.append(mean_color)
+
+        tile.save(tile_path)
+        tiles.append(tile)
+        paths.append(tile_path)
+
+    # # Calculate dominant color
+    # colors = []
+    # for tile in tiles:
+    #     mean_color = np.array(tile).mean(axis=0).mean(axis=0)
+    #     if mean_color.shape == (3,):
+    #         colors.append(mean_color)
 
     tree = spatial.KDTree(np.stack(colors))
 
@@ -80,12 +88,12 @@ def make_image(main_photo_path, tile_size, tree, k, paths, tiles, output_path):
     output = 0.5 * np.array(output) + 0.5 * np.array(main_photo)
     # Save output
     plt.imsave(output_path, output / 255)
-    return output, width, height, tile_size, closest_paths, main_photo_size
+
+    return width, height, tile_size, closest_paths, main_photo_size
 
 
 def make_all_images(main_photo_dir, output_path, tile_size, tree, k, paths, tiles):
     main_photo_paths = []
-    outputs = []
     widths = []
     heights = []
     tile_sizes = []
@@ -93,15 +101,17 @@ def make_all_images(main_photo_dir, output_path, tile_size, tree, k, paths, tile
     main_photo_sizes = []
     output_names = []
     for main_photo_path in glob.glob(main_photo_dir):
-        output_name = output_path + "output_" + main_photo_path.split('\\')[-1]
-        output, width, height, tile_size, closest_paths, main_photo_size = make_image(main_photo_path, tile_size, tree,
+        main_photo_path = main_photo_path.replace("\\",'/')
+        output_name = output_path + "output_" + main_photo_path.replace("\\",'/').split('/')[-1]
+        width, height, tile_size, closest_paths, main_photo_size = make_image(main_photo_path, tile_size, tree,
                                                                                       k, paths, tiles, output_name)
         main_photo_paths.append(main_photo_path)
-        outputs.append(output)
         widths.append(width)
         heights.append(height)
         tile_sizes.append(tile_size)
         closest_paths_list.append(closest_paths)
         main_photo_sizes.append(main_photo_size)
         output_names.append(output_name)
-    return main_photo_paths, outputs, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names
+    with open('dataPickle', 'ab') as f:
+        pickle.dump((main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names),f)
+    return main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names
