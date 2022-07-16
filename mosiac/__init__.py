@@ -22,7 +22,7 @@ oj_tile_photos_path = r"mosiac/static/oj_tiles/"
 k = 4
 
 # tile size
-tile_size = (15, 15)
+tile_size = (5, 5)
 
 # Mosaic Image output
 output_path = "mosiac/static/output_images/"
