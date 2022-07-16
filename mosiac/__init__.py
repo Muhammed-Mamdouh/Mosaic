@@ -19,7 +19,7 @@ tile_photos_path = r"mosiac/static/tiles/*"
 # Resized tiling images that will actually be used in tiling
 oj_tile_photos_path = r"mosiac/static/oj_tiles/"
 
-k = 4
+k = 15
 
 # tile size
 tile_size = (5, 5)
@@ -28,6 +28,7 @@ tile_size = (5, 5)
 output_path = "mosiac/static/output_images/"
 
 
+## uncomment to make any changes
 
 # tree, paths, tiles = prepare_tiles(tile_photos_path, oj_tile_photos_path, tile_size)
 #
@@ -37,6 +38,6 @@ output_path = "mosiac/static/output_images/"
 with open('./dataPickle', 'rb') as f:
     main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names = pickle.load(f)
 
-
+print(main_photo_paths)
 app = Flask(__name__,template_folder='Templates',static_folder='static')
 from mosiac import routes

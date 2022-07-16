@@ -101,6 +101,7 @@ def make_all_images(main_photo_dir, output_path, tile_size, tree, k, paths, tile
     main_photo_sizes = []
     output_names = []
     for main_photo_path in glob.glob(main_photo_dir):
+        print(main_photo_path)
         main_photo_path = main_photo_path.replace("\\",'/')
         output_name = output_path + "output_" + main_photo_path.replace("\\",'/').split('/')[-1]
         width, height, tile_size, closest_paths, main_photo_size = make_image(main_photo_path, tile_size, tree,
@@ -112,6 +113,6 @@ def make_all_images(main_photo_dir, output_path, tile_size, tree, k, paths, tile
         closest_paths_list.append(closest_paths)
         main_photo_sizes.append(main_photo_size)
         output_names.append(output_name)
-    with open('dataPickle', 'ab') as f:
+    with open('dataPickle', 'wb') as f:
         pickle.dump((main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names),f)
     return main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names
