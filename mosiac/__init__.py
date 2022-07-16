@@ -38,6 +38,5 @@ output_path = "mosiac/static/output_images/"
 with open('./dataPickle', 'rb') as f:
     main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names = pickle.load(f)
 
-print(main_photo_paths)
 app = Flask(__name__,template_folder='Templates',static_folder='static')
 from mosiac import routes

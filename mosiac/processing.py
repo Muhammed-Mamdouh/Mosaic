@@ -101,7 +101,6 @@ def make_all_images(main_photo_dir, output_path, tile_size, tree, k, paths, tile
     main_photo_sizes = []
     output_names = []
     for main_photo_path in glob.glob(main_photo_dir):
-        print(main_photo_path)
         main_photo_path = main_photo_path.replace("\\",'/')
         output_name = output_path + "output_" + main_photo_path.replace("\\",'/').split('/')[-1]
         width, height, tile_size, closest_paths, main_photo_size = make_image(main_photo_path, tile_size, tree,
