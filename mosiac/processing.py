@@ -56,6 +56,11 @@ def prepare_tiles(tile_photos_path, oj_tile_photos_path, tile_size):
 
 def make_image(main_photo_path, tile_size, tree, k, paths, tiles, output_path):
     main_photo = Image.open(main_photo_path)
+    aspect_ratio = main_photo.height / main_photo.width
+    new_width = 1000
+    if main_photo.width > new_width:
+        new_height = int(new_width * aspect_ratio)
+        main_photo = main_photo.resize((new_width, new_height), Image.ANTIALIAS)
     main_photo_size = main_photo.size
     width = int(np.round(main_photo.size[0] // tile_size[0]))
     height = int(np.round(main_photo.size[1] // tile_size[1]))
@@ -87,6 +92,7 @@ def make_image(main_photo_path, tile_size, tree, k, paths, tiles, output_path):
     main_photo = main_photo.resize(output.size)
     output = 0.5 * np.array(output) + 0.5 * np.array(main_photo)
     # Save output
+    #im = Image.fromarray(np.uint8(output)).save(output_path,format='JPEG', subsampling=0, quality=95,optimize=True)
     plt.imsave(output_path, output / 255)
 
     return width, height, tile_size, closest_paths, main_photo_size

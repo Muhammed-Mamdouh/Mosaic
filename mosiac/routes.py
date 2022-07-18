@@ -1,4 +1,4 @@
-from mosiac import app, widths, heights, closest_paths_list, output_names, main_photo_paths
+from mosiac import app, widths, heights, closest_paths_list, output_names, main_photo_paths,tile_size
 from flask import render_template
 
 
@@ -13,11 +13,17 @@ def home_page():
 def grid_page(n):
     n = int(n)
     output_name = r"../"+'/'.join(output_names[n].replace(r'\\','/').split('/')[1:])
+    main_image_name = r"../"+'/'.join(main_photo_paths[n].replace(r'\\','/').split('/')[1:])
     w = widths[n]
     max_width = str(100/w)+"%"
 
     h = heights[n]
+
     max_height = str(100 / h) + "%"
+    image_width = str(tile_size[0] * w)
+    image_height = str(tile_size[1] * h)
+
+
 
     l = 0
     closest_objects = closest_paths_list[n].copy()[:, :]
@@ -28,7 +34,7 @@ def grid_page(n):
             m += 1
         l += 1
 
-    return render_template('grid.html',data=closest_objects,max_width=max_width,max_height=max_height,output_name=output_name)
+    return render_template('grid.html',data=closest_objects,max_width=max_width,max_height=max_height,output_name=output_name,main_image_name=main_image_name,image_width=image_width,image_height=image_height)
 
 
 @app.route('/<n>/<l>/<m>', methods=['GET'])
