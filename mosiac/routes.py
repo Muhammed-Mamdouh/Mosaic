@@ -34,7 +34,7 @@ def grid_page(n):
             m += 1
         l += 1
 
-    return render_template('grid.html',data=closest_objects,max_width=max_width,max_height=max_height,output_name=output_name,main_image_name=main_image_name,image_width=image_width,image_height=image_height)
+    return render_template('grid.html',data=closest_objects,max_width=max_width,max_height=max_height,output_name=output_name)
 
 
 @app.route('/<n>/<l>/<m>', methods=['GET'])

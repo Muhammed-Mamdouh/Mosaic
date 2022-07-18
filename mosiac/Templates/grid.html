@@ -22,7 +22,6 @@ body {
   -ms-flex-wrap: nowrap; /* IE10 */
   flex-wrap: nowrap;
   padding: 0 0px;
-  width:{{image_width}}px;
 <!--  max-height: {{max_width}};-->
 }
 
@@ -33,7 +32,6 @@ body {
   max-width: {{max_width}};
   padding: 0 0px;
   flex-wrap: nowrap;
-  height:{{image_height}}px;
 }
 
 .column img {
@@ -81,13 +79,13 @@ Grid
 </div>
 
 <div align="center" style="background-color: #414141;">
-    <div class="rowf" align="center" style="background-image:url({{output_name}});
+    <div class="rowf" align="center" style="width:90%;margin-left:4%;margin-right:4%;padding:1%;background-image:url({{output_name}});
   background-repeat: no-repeat;
   background-size: 100%;">
         {% for row in data%}
         <div class="column">
             {% for image in row%}
-            <a href={{url_for('image_page',n=image[1],l=image[2],m=image[3])}} target="_blank" style="display: block;opacity: 100%;height:{{max_height}};width:100%">
+            <a href={{url_for('image_page',n=image[1],l=image[2],m=image[3])}} target="_blank" style="display: block;opacity: 100%;width:100%;aspect-ratio : 1 / 1;">
 
 <!--                <img src={{image[0]}} style="width:100%;opacity: 0%;">-->
             </a>
