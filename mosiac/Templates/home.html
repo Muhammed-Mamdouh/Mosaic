@@ -8,6 +8,18 @@ Home Page
 <h1 align="center">Home Page</h1>
 
 <div align="center" style="grid-template-columns: 1fr 1fr 1fr;display: grid;vertical-align:middle">
+
+
+    <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;min-width: 0;">
+            <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
+        <form action = "/" method = "post" enctype="multipart/form-data">
+        <input type="file" name="file" />
+        <input type = "submit" value="Upload">
+    </form>
+            </div>
+</div>
+
+
     {% for path in main_photos%}
         <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;">
             <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
@@ -19,10 +31,7 @@ Home Page
             </div>
 </div>
     {% endfor %}
-    <form action = "/" method = "post" enctype="multipart/form-data">
-        <input type="file" name="file" />
-        <input type = "submit" value="Upload">
-    </form>
+
 
 <br/>
 </div>
