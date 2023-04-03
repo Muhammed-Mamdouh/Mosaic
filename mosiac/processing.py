@@ -28,11 +28,13 @@ def prepare_tiles(tile_photos_path, oj_tile_photos_path, tile_size):
     # Import and resize all tiles
     tiles = []
     paths = []
+    original_paths = []
     colors = []
     for path in tile_paths:
         image_path = path.split('/')[-1].split('\\')[-1]
         tile = Image.open(path)
         tile_path = (oj_tile_photos_path + image_path).replace('\\','/')
+        original_tile_path = (tile_photos_path[:-1] + image_path).replace('\\', '/')
         tile = tile.resize(tile_size)
 
         # Calculate dominant color
@@ -43,6 +45,7 @@ def prepare_tiles(tile_photos_path, oj_tile_photos_path, tile_size):
         tile.save(tile_path)
         tiles.append(tile)
         paths.append(tile_path)
+        original_paths.append(original_tile_path)
 
     # # Calculate dominant color
     # colors = []
@@ -53,7 +56,7 @@ def prepare_tiles(tile_photos_path, oj_tile_photos_path, tile_size):
 
     tree = spatial.KDTree(np.stack(colors))
 
-    return tree, paths, tiles
+    return tree, paths, tiles, original_paths
 
 
 def make_image(main_photo_path, tile_size, tree, k, paths, tiles, output_path):
@@ -92,7 +95,7 @@ def make_image(main_photo_path, tile_size, tree, k, paths, tiles, output_path):
             output.paste(tiles[index], (x, y))
     # Make main image the same size as output and get their avg
     main_photo = main_photo.resize(output.size)
-    output = 0.5 * np.array(output) + 0.5 * np.array(main_photo)
+    output = 0.6 * np.array(output) + 0.4 * np.array(main_photo)
     # Save output
     plt.imsave(output_path, output / 255)
 
@@ -120,6 +123,10 @@ def make_all_images(main_photo_dir, output_path, tile_size, tree, k, paths, tile
         closest_paths_list.append(closest_paths)
         main_photo_sizes.append(main_photo_size)
         output_names.append(output_name)
-    with open('dataPickle', 'wb') as f:
-        pickle.dump((main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names, tiles, tree, paths),f)
+
     return main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names, tiles
+
+
+def dump_to_pickle(*args):
+    with open('dataPickle', 'wb') as f:
+        pickle.dump(args,f)

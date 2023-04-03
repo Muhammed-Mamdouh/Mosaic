@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}
+Home Page
+{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-s6p0zvNzOwDDpHx1xjDg/1Q/kX9CfL8jBOzG+MWKj2sV7wWjDjxVxgHJtPcXtKj8p1FJLkzTgjK05yRl8obPfg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<!--header-->
+<h1 align="center">Tiles Page</h1>
+
+
+<div align="center" style="grid-template-columns: repeat(6,1fr);display: grid;vertical-align:middle">
+
+    <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;min-width: 0;">
+            <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
+        <form action = "/" method = "post" enctype="multipart/form-data">
+        <input type="file" name="file" />
+        <input type = "submit" value="Upload">
+    </form>
+            </div>
+</div>
+
+
+    {% for path in tile_photos%}
+        <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;">
+            <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
+
+        <a href={{url_for('tile_image_page',n=loop.index-1)}} target="_blank" style="opacity: 100%;padding:10px;vertical-align:middle">
+
+            <img src={{path}} style="min-width: 0;max-width: 90%;width:90%;opacity: 100%;">
+
+        </a>
+                <div style="position: absolute; top: 5px; right: 5px; color: #fff; font-size: 1.5rem; cursor: pointer;" onclick="deleteImage('{{ path }}')">
+          <span style="font-size: 1.5rem; line-height: 1;">✖</span>
+        </div>
+
+            </div>
+
+</div>
+    {% endfor %}
+
+
+<br/>
+</div>
+
+
+<script>
+function deleteImage(path) {
+  fetch('/delete-image', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ path: path })
+  })
+  .then(response => {
+    if (response.ok) {
+      console.log(`Deleted image at ${path}`);
+    } else {
+      console.log(`Error deleting image at ${path}`);
+    }
+  })
+  .catch(error => console.error(error));
+}
+</script>
+
+{% endblock %}

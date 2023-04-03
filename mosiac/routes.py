@@ -1,5 +1,5 @@
-from mosiac import app, widths, heights, make_image,closest_paths_list, output_names, main_photo_paths, main_photo_dir, output_path, tile_sizes, main_photo_sizes, tile_size, tree,k, paths, tiles
-from flask import render_template, request
+from mosiac import app, widths, heights, make_image,closest_paths_list, output_names, main_photo_paths, main_photo_dir, output_path, original_paths, tile_sizes, main_photo_sizes, tile_size, tree,k, paths, tiles
+from flask import render_template, request, jsonify
 
 
 
@@ -37,8 +37,6 @@ def grid_page(n):
     image_width = str(tile_size[0] * w)
     image_height = str(tile_size[1] * h)
 
-
-
     l = 0
     closest_objects = closest_paths_list[n].copy()[:, :]
     for i in range(closest_paths_list[n].shape[0]):
@@ -57,3 +55,22 @@ def image_page(n, l, m):
     raw = closest_paths_list[n][int(l),int(m)]
     path = r"../../"+'/'.join(raw.replace(r'\\','/').split('/')[1:]).replace("oj_tiles","tiles")
     return render_template('image.html', path=path)
+
+@app.route('/tiles', methods=['GET','POST'])
+def tile_page():
+    tile_photos = [r"../" + '/'.join(path.split('/')[1:]) for path in original_paths]
+    return render_template('tiles.html', tile_photos=tile_photos)
+
+@app.route('/tile_image/<n>')
+def tile_image_page(n):
+    n = int(n)
+    path = original_paths[n]
+    path = r"../" + '/'.join(path.split('/')[1:])
+    return render_template('image.html', path=path)
+
+@app.route('/delete-image', methods=['POST'])
+def delete_image():
+    path = request.json['path']
+    # Delete the image at the given path
+    # ...
+    return jsonify(success=True)
