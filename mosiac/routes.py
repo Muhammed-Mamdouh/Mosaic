@@ -1,11 +1,25 @@
-from mosiac import app, widths, heights, closest_paths_list, output_names, main_photo_paths,tile_size
-from flask import render_template
+from mosiac import app, widths, heights, make_image,closest_paths_list, output_names, main_photo_paths, main_photo_dir, output_path, tile_sizes, main_photo_sizes, tile_size, tree,k, paths, tiles
+from flask import render_template, request
 
 
 
-@app.route('/')
-@app.route('/home', methods=['GET'])
+@app.route('/',methods=['GET','POST'])
+@app.route('/home', methods=['GET','POST'])
 def home_page():
+    if request.method == 'POST':
+        print("hey")
+        f = request.files['file']
+        f.save(main_photo_dir[:-1]+f.filename)
+        main_photo_path = main_photo_dir[:-1]+f.filename
+        output_name = output_path + "output_" + main_photo_path.replace("\\", '/').split('/')[-1]
+        width, height, tile_size2, closest_paths, main_photo_size = make_image(main_photo_path, tile_size, tree, k, paths, tiles, output_name)
+        main_photo_paths.append(main_photo_path)
+        widths.append(width)
+        heights.append(height)
+        tile_sizes.append(tile_size2)
+        closest_paths_list.append(closest_paths)
+        main_photo_sizes.append(main_photo_size)
+        output_names.append(output_name)
     main_photos = [r"../"+'/'.join(path.split('/')[1:]) for path in main_photo_paths]
     return render_template('home.html', main_photos=main_photos)
 

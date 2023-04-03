@@ -1,4 +1,6 @@
 import glob
+import sys
+
 from PIL import Image
 from scipy import spatial
 import numpy as np
@@ -92,13 +94,13 @@ def make_image(main_photo_path, tile_size, tree, k, paths, tiles, output_path):
     main_photo = main_photo.resize(output.size)
     output = 0.5 * np.array(output) + 0.5 * np.array(main_photo)
     # Save output
-    #im = Image.fromarray(np.uint8(output)).save(output_path,format='JPEG', subsampling=0, quality=95,optimize=True)
     plt.imsave(output_path, output / 255)
 
     return width, height, tile_size, closest_paths, main_photo_size
 
 
 def make_all_images(main_photo_dir, output_path, tile_size, tree, k, paths, tiles):
+    print(sys.getsizeof(tiles))
     main_photo_paths = []
     widths = []
     heights = []
@@ -119,5 +121,5 @@ def make_all_images(main_photo_dir, output_path, tile_size, tree, k, paths, tile
         main_photo_sizes.append(main_photo_size)
         output_names.append(output_name)
     with open('dataPickle', 'wb') as f:
-        pickle.dump((main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names),f)
-    return main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names
+        pickle.dump((main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names, tiles, tree, paths),f)
+    return main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names, tiles
