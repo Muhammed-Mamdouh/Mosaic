@@ -19,14 +19,14 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 db = SQLAlchemy(app)
 
 from mosiac.models import *
-from mosiac.processing import make_all_images, prepare_tiles, make_image, dump_to_pickle, read_all_tiles, read_tile, resize_tile
+from mosiac.processing import make_all_images, prepare_tiles, make_image, dump_to_pickle, read_all_tiles, read_tile, resize_tile, make_tree
 
 
 with app.app_context():
     db.create_all()
 
 if start_over:
-    conf = Configuration(main_photo_dir=r"mosiac/static/main_images/*", tiles_photo_dir=r"mosiac/static/tiles/", resized_tiles_photo_dir = r"mosiac/static/oj_tiles/", k=4, tile_width=10, tile_height=10, output_photo_dir=r"mosiac/static/output_images/", tiles_pickle=None)
+    conf = Configuration(main_photo_dir=r"mosiac/static/main_images/*", tiles_photo_dir=r"mosiac/static/tiles/", resized_tiles_photo_dir = r"mosiac/static/oj_tiles/", k=4, tile_width=15, tile_height=15, output_photo_dir=r"mosiac/static/output_images/", id=1)
 else:
     with app.app_context():
         conf = Configuration.query.first()
@@ -57,13 +57,12 @@ session = db.session
 if start_over:
     with app.app_context():
         session.add(conf)
-        tree = prepare_tiles(conf,session)
-        conf.tree = pickle.dumps(tree)
+        prepare_tiles(conf,session)
 
         tiles = read_all_tiles(conf, session)
         conf.tiles = pickle.dumps(tiles)
 
-        make_all_images(conf, session, tiles)
+        make_all_images(conf, session)
         session.commit()
         print(Configuration.query.all())
 # dump_to_pickle(main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names, tiles, tree, paths, original_paths)

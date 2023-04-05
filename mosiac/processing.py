@@ -47,14 +47,17 @@ def resize_tile(file, conf, session):
         mean_color = np.array(tile).mean(axis=0).mean(axis=0)
 
         if mean_color.shape == (3,):
-            re_tile = ResizedTile(tile_path=tile_path)
+            re_tile = ResizedTile(tile_path=tile_path, color=tuple(mean_color), tile_pickle = pickle.dumps(tile))
             tile.save(tile_path)
             session.add(re_tile)
             return mean_color
     else:
         os.remove(file)
 
-
+def make_tree(conf):
+    colors = ResizedTile.query.with_entities(ResizedTile.color).all()
+    tree = spatial.KDTree(np.squeeze(colors))
+    conf.tree = pickle.dumps(tree)
 
 def prepare_tiles(conf, session):
     # Clean oj_tile files
@@ -67,22 +70,12 @@ def prepare_tiles(conf, session):
         colors.append(color)
 
 
-    # Import and resize all tiles
-    # colors = ResizedTile.query.with_entities(ResizedTile.color).all()
 
-    # # Calculate dominant color
-    # colors = []
-    # for tile in tiles:
-    #     mean_color = np.array(tile).mean(axis=0).mean(axis=0)
-    #     if mean_color.shape == (3,):
-    #         colors.append(mean_color)
-
-    tree = spatial.KDTree(np.stack(colors))
-
-    return tree
+    make_tree(conf)
 
 
-def make_image(main_photo_obj, conf, tree, tiles, session):
+
+def make_image(main_photo_obj, conf, tree, tiles, paths):
     main_photo_path = main_photo_obj.main_photo_path
     main_photo = Image.open(main_photo_path)
     main_photo_obj.main_photo_width, main_photo_obj.main_photo_height = (main_photo.width, main_photo.height)
@@ -100,7 +93,9 @@ def make_image(main_photo_obj, conf, tree, tiles, session):
     # Find closest tile photo for every pixel
     closest_tiles = np.zeros((width, height), dtype=np.uint32)
     closest_paths = np.zeros((width, height), dtype='object')
-    paths = np.array(ResizedTile.query.with_entities(ResizedTile.tile_path).all())
+    paths, tiles = list(zip(*ResizedTile.query.with_entities(ResizedTile.tile_path, ResizedTile.tile_pickle).all()))
+    paths = np.array(paths)
+    tiles = np.array([pickle.loads(tile) for tile in tiles])
     for i in range(width):
         for j in range(height):
             closestk = tree.query(resized_photo.getpixel((i, j)), k=conf.k)
@@ -109,7 +104,7 @@ def make_image(main_photo_obj, conf, tree, tiles, session):
             else:
                 closest = random.choice(closestk[1])
             closest_tiles[i, j] = closest
-            closest_paths[i, j] = paths[closest][0]
+            closest_paths[i, j] = paths[closest]
 
     # Create an output image
     output = Image.new('RGB', (tile_size[0] * width, tile_size[1] * height))
@@ -138,12 +133,14 @@ def make_image(main_photo_obj, conf, tree, tiles, session):
     return main_photo_obj
 
 
-def make_all_images(conf, session, tiles):
+def make_all_images(conf, session):
     # tiles = read_all_tiles(conf, session)
-    print(sys.getsizeof(tiles))
     tree = conf.tree
+    paths, tiles = list(zip(*ResizedTile.query.with_entities(ResizedTile.tile_path, ResizedTile.tile_pickle).all()))
+    paths = np.array(paths)
+    tiles = np.array([pickle.loads(tile) for tile in tiles])
     for main_photo_obj in MainImage.query.all():
-        main_photo_obj = make_image(main_photo_obj, conf, tree, tiles, session)
+        main_photo_obj = make_image(main_photo_obj, conf, tree, tiles, paths)
         session.add(main_photo_obj)
         print(main_photo_obj)
 

@@ -12,10 +12,11 @@ Home Page
 
     <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;min-width: 0;">
             <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
-        <form action = "/" method = "post" enctype="multipart/form-data">
-        <input type="file" name="file" />
-        <input type = "submit" value="Upload">
-    </form>
+        <form action="/" method="post" enctype="multipart/form-data">
+  <label for="files">Select files:</label>
+  <input type="file" id="files" name="files[]" multiple>
+  <button type="submit">Upload</button>
+</form>
             </div>
 </div>
 

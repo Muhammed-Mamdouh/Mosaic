@@ -1,6 +1,6 @@
 
-from mosiac import app, conf, db, MainImage, Tile, ResizedTile, make_image, read_tile, resize_tile
-from flask import render_template, request, jsonify
+from mosiac import app, db, Configuration, MainImage, Tile, ResizedTile, make_image, read_tile, resize_tile, make_tree
+from flask import render_template, request, jsonify, redirect, url_for
 import pickle
 import numpy as np
 
@@ -9,22 +9,31 @@ import numpy as np
 @app.route('/',methods=['GET','POST'])
 @app.route('/home', methods=['GET','POST'])
 def home_page():
+    conf = Configuration.query.filter_by(id=1).first()
     if request.method == 'POST':
         print("hey")
-        f = request.files['file']
-        f.save(conf.main_photo_dir[:-1]+f.filename)
-        main_photo_path = conf.main_photo_dir[:-1]+f.filename
-        main_photo_obj = MainImage(main_photo_path=main_photo_path)
-        with app.app_context():
-            session = db.session
-            tree = pickle.loads(conf.tree)
-            tiles = pickle.loads(conf.tiles)
-            main_photo_obj = make_image(main_photo_obj, conf, tree, tiles, session)
-            session.add(main_photo_obj)
-            session.commit()
+        files = request.files.getlist('files[]')
+        if files[0].filename:
+            paths, tiles = list(
+                zip(*ResizedTile.query.with_entities(ResizedTile.tile_path, ResizedTile.tile_pickle).all()))
+            paths = np.array(paths)
+            tiles = np.array([pickle.loads(tile) for tile in tiles])
+            for f in files:
+                f.save(conf.main_photo_dir[:-1]+f.filename)
+                main_photo_path = conf.main_photo_dir[:-1]+f.filename
+                main_photo_obj = MainImage(main_photo_path=main_photo_path)
+                with app.app_context():
+                    session = db.session
+                    tree = pickle.loads(conf.tree)
+                    print("in hooome", tree.n)
 
-    main_photos = [(r"../"+'/'.join(path.split('/')[1:]), id) for path, id in MainImage.query.with_entities(MainImage.main_photo_path, MainImage.id).all()]
-    return render_template('home.html', main_photos=main_photos)
+                    main_photo_obj = make_image(main_photo_obj, conf, tree, tiles, paths)
+                    session.add(main_photo_obj)
+                    session.commit()
+        return redirect(url_for('home_page'))
+    else:
+        main_photos = [(r"../"+'/'.join(path.split('/')[1:]), id) for path, id in MainImage.query.with_entities(MainImage.main_photo_path, MainImage.id).all()]
+        return render_template('home.html', main_photos=main_photos)
 
 @app.route('/grid/<n>')
 def grid_page(n):
@@ -56,24 +65,28 @@ def grid_page(n):
 def image_page(n, l, m):
     n = int(n)
     main_photo_obj = MainImage.query.filter_by(id=n + 1).first()
-    raw = pickle.loads(main_photo_obj.closest_paths)[int(l),int(m)]
-
+    raw = pickle.loads(main_photo_obj.closest_paths)[int(l), int(m)]
     path = r"../../"+'/'.join(raw.replace(r'\\','/').split('/')[1:]).replace("oj_tiles","tiles")
     return render_template('image.html', path=path)
 
 @app.route('/tiles', methods=['GET','POST'])
 def tile_page():
+
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'Upload':
-            f = request.files['file']
-            f.save(conf.tiles_photo_dir + f.filename)
-            session = db.session
-            with app.app_context():
-                f_name = conf.tiles_photo_dir+f.filename
-                read_tile(f_name, conf, session)
-                color = resize_tile(f_name, conf, session)
-                session.commit()
+            files = request.files.getlist('files[]')
+            if files[0].filename:
+                for f in files:
+                    conf = Configuration.query.filter_by(id=1).first()
+                    f.save(conf.tiles_photo_dir + f.filename)
+                    session = db.session
+                    with app.app_context():
+                        f_name = conf.tiles_photo_dir+f.filename
+                        read_tile(f_name, conf, session)
+                        color = resize_tile(f_name, conf, session)
+                        session.commit()
+
 
         elif action == 'Delete':
             print("in tile post")
@@ -82,12 +95,23 @@ def tile_page():
             # ...
             with app.app_context():
                 tile = Tile.query.filter_by(id=path).first()
-                # re_tile = ResizedTile.query.filter_by(tile_path=path).first()
+                re_tile = ResizedTile.query.filter_by(id=path).first()
                 print(path, tile)
                 db.session.delete(tile)
-                # # db.session.delete(re_tile)
+                db.session.delete(re_tile)
                 db.session.commit()
-            return jsonify(success=True)
+        elif action == "Update Tree":
+            conf = Configuration.query.filter_by(id=1).first()
+            print("in Update treeeeeeeeeeeeeeeeeeeeeeeeeeee")
+            session = db.session()
+            with app.app_context():
+                make_tree(conf)
+                session.commit()
+            conf = Configuration.query.filter_by(id=1).first()
+            t = pickle.loads(conf.tree)
+            print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++',t.leafsize, t.n)
+
+        return redirect(url_for('tile_page'))
     tile_photos = [(id ,r"../" + '/'.join(path.split('/')[1:])) for id, path in reversed(Tile.query.with_entities(Tile.id, Tile.tile_path).all())]
     return render_template('tiles.html', tile_photos=tile_photos)
 
@@ -105,10 +129,10 @@ def delete_image():
     # ...
     with app.app_context():
         tile = Tile.query.filter_by(id=path).first()
-        # re_tile = ResizedTile.query.filter_by(tile_path=path).first()
+        re_tile = ResizedTile.query.filter_by(id=path).first()
         print(path ,tile)
         db.session.delete(tile)
-        # # db.session.delete(re_tile)
+        db.session.delete(re_tile)
         db.session.commit()
     tile_page()
     return jsonify(success=True)

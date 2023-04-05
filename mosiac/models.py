@@ -1,6 +1,22 @@
 from mosiac import db
 
+from sqlalchemy import TypeDecorator, Text
+import json
 from sqlalchemy.dialects.postgresql import ARRAY
+
+
+class TupleType(TypeDecorator):
+    impl = Text
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            value = json.dumps(value)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            value = tuple(json.loads(value))
+        return value
 # class TupleElement(db.Model):
 #
 #     id = db.Column(db.Integer, primary_key=True)
@@ -36,7 +52,8 @@ class Tile(db.Model):
 class ResizedTile(db.Model):
     id = db.Column(db.Integer, primary_key=True,autoincrement=True)
     tile_path = db.Column(db.String)
-    # color = db.Column(db.ARRAY(db.Float))
+    color = db.Column(TupleType)
+    tile_pickle = db.Column(db.PickleType)
 
 class MainImage(db.Model):
     id = db.Column(db.Integer, primary_key=True,autoincrement=True)

@@ -9,13 +9,16 @@ Home Page
 <!--header-->
 <h1 align="center">Tiles Page</h1>
 
-
+<form method="POST" action="{{ url_for('tile_page') }}">
+  <button type="submit" name="action" value="Update Tree" class="btn btn-primary">Update Tree</button>
+</form>
 <div align="center" style="grid-template-columns: repeat(6,1fr);display: grid;vertical-align:middle">
+
 
     <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;min-width: 0;">
             <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
         <form action = "/tiles" method = "post" enctype="multipart/form-data">
-        <input type="file" name="file" />
+        <input type="file" id="files" name="files[]" multiple>
         <input type = "submit" name="action" value="Upload">
     </form>
             </div>
@@ -24,6 +27,7 @@ Home Page
 
     {% for path in tile_photos%}
         <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;">
+
             <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
 
         <a href={{url_for('tile_image_page',n=path[0])}} target="_blank" style="opacity: 100%;padding:10px;vertical-align:middle">
