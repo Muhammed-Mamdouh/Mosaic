@@ -14,9 +14,9 @@ Home Page
 
     <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;min-width: 0;">
             <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
-        <form action = "/" method = "post" enctype="multipart/form-data">
+        <form action = "/tiles" method = "post" enctype="multipart/form-data">
         <input type="file" name="file" />
-        <input type = "submit" value="Upload">
+        <input type = "submit" name="action" value="Upload">
     </form>
             </div>
 </div>
@@ -26,12 +26,12 @@ Home Page
         <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;">
             <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
 
-        <a href={{url_for('tile_image_page',n=loop.index-1)}} target="_blank" style="opacity: 100%;padding:10px;vertical-align:middle">
+        <a href={{url_for('tile_image_page',n=path[0])}} target="_blank" style="opacity: 100%;padding:10px;vertical-align:middle">
 
-            <img src={{path}} style="min-width: 0;max-width: 90%;width:90%;opacity: 100%;">
+            <img src={{path[1]}} style="min-width: 0;max-width: 90%;width:90%;opacity: 100%;">
 
         </a>
-                <div style="position: absolute; top: 5px; right: 5px; color: #fff; font-size: 1.5rem; cursor: pointer;" onclick="deleteImage('{{ path }}')">
+                <div style="position: absolute; top: 5px; right: 5px; color: #fff; font-size: 1.5rem; cursor: pointer;" onclick="deleteImage('{{ path[0] }}')">
           <span style="font-size: 1.5rem; line-height: 1;">✖</span>
         </div>
 
@@ -47,16 +47,22 @@ Home Page
 
 <script>
 function deleteImage(path) {
-  fetch('/delete-image', {
+  fetch('/tiles', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/x-www-form-urlencoded'
     },
-    body: JSON.stringify({ path: path })
+    body: new URLSearchParams({
+      action: 'Delete',
+      path: path
+    })
   })
   .then(response => {
     if (response.ok) {
       console.log(`Deleted image at ${path}`);
+      setTimeout(() => {
+        location.reload(); // Reload the page after a short delay
+      }, 500); // Delay for 500 milliseconds (0.5 seconds)
     } else {
       console.log(`Error deleting image at ${path}`);
     }

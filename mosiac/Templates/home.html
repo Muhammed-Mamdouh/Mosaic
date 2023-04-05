@@ -23,9 +23,9 @@ Home Page
     {% for path in main_photos%}
         <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;">
             <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
-        <a href={{url_for('grid_page',n=loop.index-1)}} target="_blank" style="opacity: 100%;padding:10px;vertical-align:middle">
+        <a href={{url_for('grid_page',n=path[1]-1)}} target="_blank" style="opacity: 100%;padding:10px;vertical-align:middle">
 
-            <img src={{path}} style="width:90%;opacity: 100%;">
+            <img src={{path[0]}} style="width:90%;opacity: 100%;">
 
         </a>
             </div>
