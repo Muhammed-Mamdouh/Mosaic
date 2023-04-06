@@ -81,7 +81,7 @@ def make_image(main_photo_obj, conf, tree, tiles, paths):
     main_photo_obj.main_photo_width, main_photo_obj.main_photo_height = (main_photo.width, main_photo.height)
     width, height = main_photo.width, main_photo.height
     aspect_ratio = height / width
-    new_width = 1000
+    new_width = 2000
     if main_photo.width > new_width:
         new_height = int(new_width * aspect_ratio)
         main_photo = main_photo.resize((new_width, new_height), Image.ANTIALIAS)
@@ -93,9 +93,6 @@ def make_image(main_photo_obj, conf, tree, tiles, paths):
     # Find closest tile photo for every pixel
     closest_tiles = np.zeros((width, height), dtype=np.uint32)
     closest_paths = np.zeros((width, height), dtype='object')
-    paths, tiles = list(zip(*ResizedTile.query.with_entities(ResizedTile.tile_path, ResizedTile.tile_pickle).all()))
-    paths = np.array(paths)
-    tiles = np.array([pickle.loads(tile) for tile in tiles])
     for i in range(width):
         for j in range(height):
             closestk = tree.query(resized_photo.getpixel((i, j)), k=conf.k)

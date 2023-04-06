@@ -14,6 +14,8 @@ if os.path.exists("instance/project.db"):
 
 
 app = Flask(__name__,template_folder='Templates',static_folder='static')
+app.config['SECRET_KEY'] = 'your_secret_key_here'
+app.config['FLASH_MESSAGES'] = True
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 
 db = SQLAlchemy(app)

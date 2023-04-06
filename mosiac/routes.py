@@ -1,6 +1,6 @@
 
 from mosiac import app, db, Configuration, MainImage, Tile, ResizedTile, make_image, read_tile, resize_tile, make_tree
-from flask import render_template, request, jsonify, redirect, url_for
+from flask import render_template, request, jsonify, redirect, url_for, flash
 import pickle
 import numpy as np
 
@@ -96,20 +96,17 @@ def tile_page():
             with app.app_context():
                 tile = Tile.query.filter_by(id=path).first()
                 re_tile = ResizedTile.query.filter_by(id=path).first()
-                print(path, tile)
                 db.session.delete(tile)
                 db.session.delete(re_tile)
                 db.session.commit()
         elif action == "Update Tree":
             conf = Configuration.query.filter_by(id=1).first()
-            print("in Update treeeeeeeeeeeeeeeeeeeeeeeeeeee")
             session = db.session()
             with app.app_context():
                 make_tree(conf)
                 session.commit()
             conf = Configuration.query.filter_by(id=1).first()
             t = pickle.loads(conf.tree)
-            print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++',t.leafsize, t.n)
 
         return redirect(url_for('tile_page'))
     tile_photos = [(id ,r"../" + '/'.join(path.split('/')[1:])) for id, path in reversed(Tile.query.with_entities(Tile.id, Tile.tile_path).all())]
@@ -122,17 +119,24 @@ def tile_image_page(n):
     path = r"../" + '/'.join(path.split('/')[1:])
     return render_template('image.html', id=id, path=path)
 
-@app.route('/delete-image', methods=['POST'])
-def delete_image():
-    path = request.json['path']
-    # Delete the image at the given path
-    # ...
+@app.route('/edit_configuration')
+def edit_configuration():
     with app.app_context():
-        tile = Tile.query.filter_by(id=path).first()
-        re_tile = ResizedTile.query.filter_by(id=path).first()
-        print(path ,tile)
-        db.session.delete(tile)
-        db.session.delete(re_tile)
+        config = Configuration.query.get(1)
+    return render_template('conf.html', config=config)
+
+@app.route('/update_configuration', methods=['POST'])
+def update_configuration():
+    with app.app_context():
+        config = Configuration.query.get(1)
+        config.main_photo_dir = request.form['main_photo_dir']
+        config.tiles_photo_dir = request.form['tiles_photo_dir']
+        config.resized_tiles_photo_dir = request.form['resized_tiles_photo_dir']
+        config.k = int(request.form['k'])
+        config.tile_width = int(request.form['tile_width'])
+        config.tile_height = int(request.form['tile_height'])
+        config.output_photo_dir = request.form['output_photo_dir']
+
         db.session.commit()
-    tile_page()
-    return jsonify(success=True)
+    flash('Configuration updated successfully!', 'success')
+    return redirect(url_for('edit_configuration'))

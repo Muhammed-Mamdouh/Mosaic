@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}
+Settings Page
+{% endblock %}
+{% block content %}
+
+
+<!--header-->
+<h1 align="center">Settings Page</h1>
+
+
+<div align="center" style="grid-template-columns: 1fr;display: grid;vertical-align:middle">
+
+
+    <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;min-width: 0;">
+
+        <form method="post" action="/update_configuration">
+      <label for="main_photo_dir">Main Photo Directory:</label>
+      <input type="text" name="main_photo_dir" value="{{ config.main_photo_dir }}"><br>
+
+      <label for="tiles_photo_dir">Tiles Photo Directory:</label>
+      <input type="text" name="tiles_photo_dir" value="{{ config.tiles_photo_dir }}"><br>
+
+      <label for="resized_tiles_photo_dir">Resized Tiles Photo Directory:</label>
+      <input type="text" name="resized_tiles_photo_dir" value="{{ config.resized_tiles_photo_dir }}"><br>
+
+      <label for="k">K:</label>
+      <input type="number" name="k" value="{{ config.k }}"><br>
+
+      <label for="tile_width">Tile Width:</label>
+      <input type="number" name="tile_width" value="{{ config.tile_width }}"><br>
+
+      <label for="tile_height">Tile Height:</label>
+      <input type="number" name="tile_height" value="{{ config.tile_height }}"><br>
+
+      <label for="output_photo_dir">Output Photo Directory:</label>
+      <input type="text" name="output_photo_dir" value="{{ config.output_photo_dir }}"><br>
+
+
+
+      <input type="submit" value="Save Changes">
+    </form>
+    </div>
+</div>
+{% endblock %}
