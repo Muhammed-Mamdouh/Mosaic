@@ -1,5 +1,5 @@
 
-from mosiac import app, db, Configuration, MainImage, Tile, ResizedTile, make_image, read_tile, resize_tile, make_tree
+from mosiac import app, db, Configuration, MainImage, Tile, make_image, read_tile, make_tree
 from flask import render_template, request, jsonify, redirect, url_for, flash
 import pickle
 import numpy as np
@@ -15,12 +15,12 @@ def home_page():
         files = request.files.getlist('files[]')
         if files[0].filename:
             paths, tiles = list(
-                zip(*ResizedTile.query.with_entities(ResizedTile.tile_path, ResizedTile.tile_pickle).all()))
+                zip(*Tile.query.with_entities(Tile.resized_tile_path, Tile.tile_pickle).all()))
             paths = np.array(paths)
             tiles = np.array([pickle.loads(tile) for tile in tiles])
             for f in files:
+                main_photo_path = conf.main_photo_dir[:-1] + f.filename
                 f.save(conf.main_photo_dir[:-1]+f.filename)
-                main_photo_path = conf.main_photo_dir[:-1]+f.filename
                 main_photo_obj = MainImage(main_photo_path=main_photo_path)
                 with app.app_context():
                     session = db.session
@@ -66,7 +66,10 @@ def image_page(n, l, m):
     n = int(n)
     main_photo_obj = MainImage.query.filter_by(id=n + 1).first()
     raw = pickle.loads(main_photo_obj.closest_paths)[int(l), int(m)]
-    path = r"../../"+'/'.join(raw.replace(r'\\','/').split('/')[1:]).replace("oj_tiles","tiles")
+    conf = Configuration.query.get(1)
+    resized_tiles_photo_dir = '/'.join(conf.resized_tiles_photo_dir.split('/')[1:])
+    tiles_photo_dir = '/'.join(conf.tiles_photo_dir.split('/')[1:])
+    path = r"../../"+'/'.join(raw.replace(r'\\','/').split('/')[1:]).replace(resized_tiles_photo_dir, tiles_photo_dir)
     return render_template('image.html', path=path)
 
 @app.route('/tiles', methods=['GET','POST'])
@@ -84,7 +87,6 @@ def tile_page():
                     with app.app_context():
                         f_name = conf.tiles_photo_dir+f.filename
                         read_tile(f_name, conf, session)
-                        color = resize_tile(f_name, conf, session)
                         session.commit()
 
 
@@ -95,9 +97,7 @@ def tile_page():
             # ...
             with app.app_context():
                 tile = Tile.query.filter_by(id=path).first()
-                re_tile = ResizedTile.query.filter_by(id=path).first()
                 db.session.delete(tile)
-                db.session.delete(re_tile)
                 db.session.commit()
         elif action == "Update Tree":
             conf = Configuration.query.filter_by(id=1).first()

@@ -8,21 +8,33 @@ import pickle
 import os
 import random
 import matplotlib.pyplot as plt
-from mosiac import Tile, ResizedTile, MainImage
+from mosiac import Tile, MainImage
 
 random.seed(42)
 
 def read_tile(file,conf ,session):
+    if " " in file:
+        os.rename(file, file.replace(" ", ""))
+    file = file.replace(" ", "")
+    image_path = file.split('/')[-1].split('\\')[-1]
+    original_tile_path = (conf.tiles_photo_dir + image_path).replace('\\', '/')
     if 'jpg' in file.lower() or 'jpeg' in file.lower():
-        if " " in file:
-            os.rename(file, file.replace(" ", ""))
-        file = file.replace(" ", "")
-        image_path = file.split('/')[-1].split('\\')[-1]
-        original_tile_path = (conf.tiles_photo_dir + image_path).replace('\\', '/')
-        tile = Tile(tile_path=original_tile_path)
-        session.add(tile)
+
+        tile_path = (conf.resized_tiles_photo_dir + image_path).replace('\\', '/')
+
+        tile_image = Image.open(file)
+        tile_image = tile_image.resize((conf.tile_width, conf.tile_height))
+
+        # Calculate dominant color
+        mean_color = np.array(tile_image).mean(axis=0).mean(axis=0)
+
+        if mean_color.shape == (3,):
+            tile = Tile(tile_path=original_tile_path, resized_tile_path=tile_path, color=tuple(mean_color), tile_pickle=pickle.dumps(tile_image))
+            tile_image.save(tile_path)
+            session.add(tile)
+            return mean_color
     else:
-        os.remove(file)
+        os.remove(original_tile_path)
 
 def read_all_tiles(conf, session):
     tiles = []
@@ -32,30 +44,30 @@ def read_all_tiles(conf, session):
 
     return tiles
 
-def resize_tile(file, conf, session):
-    if 'jpg' in file.lower() or 'jpeg' in file.lower():
-        if " " in file:
-            os.rename(file, file.replace(" ", ""))
-        file = file.replace(" ", "")
-        image_path = file.split('/')[-1].split('\\')[-1]
-        tile_path = (conf.resized_tiles_photo_dir + image_path).replace('\\', '/')
-
-        tile = Image.open(file)
-        tile = tile.resize((conf.tile_width, conf.tile_height))
-
-        # Calculate dominant color
-        mean_color = np.array(tile).mean(axis=0).mean(axis=0)
-
-        if mean_color.shape == (3,):
-            re_tile = ResizedTile(tile_path=tile_path, color=tuple(mean_color), tile_pickle = pickle.dumps(tile))
-            tile.save(tile_path)
-            session.add(re_tile)
-            return mean_color
-    else:
-        os.remove(file)
+# def resize_tile(file, conf, session):
+#     if 'jpg' in file.lower() or 'jpeg' in file.lower():
+#         if " " in file:
+#             os.rename(file, file.replace(" ", ""))
+#         file = file.replace(" ", "")
+#         image_path = file.split('/')[-1].split('\\')[-1]
+#         tile_path = (conf.resized_tiles_photo_dir + image_path).replace('\\', '/')
+#
+#         tile = Image.open(file)
+#         tile = tile.resize((conf.tile_width, conf.tile_height))
+#
+#         # Calculate dominant color
+#         mean_color = np.array(tile).mean(axis=0).mean(axis=0)
+#
+#         if mean_color.shape == (3,):
+#             re_tile = Tile(resized_tile_path=tile_path, color=tuple(mean_color), tile_pickle = pickle.dumps(tile))
+#             tile.save(tile_path)
+#             session.add(re_tile)
+#             return mean_color
+#     else:
+#         os.remove(file)
 
 def make_tree(conf):
-    colors = ResizedTile.query.with_entities(ResizedTile.color).all()
+    colors = Tile.query.with_entities(Tile.color).all()
     tree = spatial.KDTree(np.squeeze(colors))
     conf.tree = pickle.dumps(tree)
 
@@ -66,8 +78,8 @@ def prepare_tiles(conf, session):
     colors = []
     for file in glob.glob(conf.tiles_photo_dir + '*'):
         read_tile(file, conf, session)
-        color = resize_tile(file, conf, session)
-        colors.append(color)
+        # color = read_tile(file, conf, session)
+        # colors.append(color)
 
 
 
@@ -82,9 +94,9 @@ def make_image(main_photo_obj, conf, tree, tiles, paths):
     width, height = main_photo.width, main_photo.height
     aspect_ratio = height / width
     new_width = 2000
-    if main_photo.width > new_width:
-        new_height = int(new_width * aspect_ratio)
-        main_photo = main_photo.resize((new_width, new_height), Image.ANTIALIAS)
+    # if main_photo.width > new_width:
+    new_height = int(new_width * aspect_ratio)
+    main_photo = main_photo.resize((new_width, new_height), Image.ANTIALIAS)
     main_photo_size = main_photo.size
     tile_size = (conf.tile_width, conf.tile_height)
     width = int(np.round(main_photo.size[0] // tile_size[0]))
@@ -133,7 +145,7 @@ def make_image(main_photo_obj, conf, tree, tiles, paths):
 def make_all_images(conf, session):
     # tiles = read_all_tiles(conf, session)
     tree = conf.tree
-    paths, tiles = list(zip(*ResizedTile.query.with_entities(ResizedTile.tile_path, ResizedTile.tile_pickle).all()))
+    paths, tiles = list(zip(*Tile.query.with_entities(Tile.resized_tile_path, Tile.tile_pickle).all()))
     paths = np.array(paths)
     tiles = np.array([pickle.loads(tile) for tile in tiles])
     for main_photo_obj in MainImage.query.all():

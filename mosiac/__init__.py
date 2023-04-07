@@ -21,7 +21,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
 db = SQLAlchemy(app)
 
 from mosiac.models import *
-from mosiac.processing import make_all_images, prepare_tiles, make_image, dump_to_pickle, read_all_tiles, read_tile, resize_tile, make_tree
+from mosiac.processing import make_all_images, prepare_tiles, make_image, dump_to_pickle, read_all_tiles, read_tile, make_tree
 
 
 with app.app_context():
