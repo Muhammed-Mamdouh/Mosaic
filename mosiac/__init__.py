@@ -28,7 +28,7 @@ with app.app_context():
     db.create_all()
 
 if start_over:
-    conf = Configuration(main_photo_dir=r"mosiac/static/main_images/*", tiles_photo_dir=r"mosiac/static/tiles/", resized_tiles_photo_dir = r"mosiac/static/oj_tiles/", k=4, tile_width=15, tile_height=15, output_photo_dir=r"mosiac/static/output_images/", id=1)
+    conf = Configuration(main_photo_dir=r"mosiac/static/main_images/*", tiles_photo_dir=r"mosiac/static/tiles/", resized_tiles_photo_dir = r"mosiac/static/oj_tiles/", k=4, tile_width=20, tile_height=20, output_photo_dir=r"mosiac/static/output_images/", id=1)
 else:
     with app.app_context():
         conf = Configuration.query.first()

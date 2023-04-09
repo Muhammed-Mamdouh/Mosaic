@@ -60,3 +60,4 @@ class MainImage(db.Model):
     main_photo_width = db.Column(db.Float)
     main_photo_height = db.Column(db.Float)
     closest_paths = db.Column(db.PickleType)
+

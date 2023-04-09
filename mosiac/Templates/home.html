@@ -11,29 +11,61 @@ Home Page
 
 
     <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;min-width: 0;">
-            <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
-        <form action="/" method="post" enctype="multipart/form-data">
-  <label for="files">Select files:</label>
-  <input type="file" id="files" name="files[]" multiple>
-  <button type="submit">Upload</button>
-</form>
-            </div>
-</div>
+        <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
+            <form action="/" method="post" enctype="multipart/form-data">
+                <label for="files">Select files:</label>
+                <input type="file" id="files" name="files[]" multiple>
+                <input type="submit" name="action" value="Upload">
+            </form>
+        </div>
+    </div>
 
 
     {% for path in main_photos%}
-        <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;">
-            <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
-        <a href={{url_for('grid_page',n=path[1]-1)}} target="_blank" style="opacity: 100%;padding:10px;vertical-align:middle">
+    <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;">
+        <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
+            <a href={{url_for('grid_page',n=path[0])}} target="_blank"
+               style="opacity: 100%;padding:10px;vertical-align:middle">
 
-            <img src={{path[0]}} style="width:90%;opacity: 100%;">
+                <img src={{path[1]}} style="width:90%;opacity: 100%;">
 
-        </a>
+            </a>
+            <div style="position: absolute; top: 5px; right: 5px; font-size: 1.5rem; cursor: pointer;"
+                 onclick="deleteImage('{{ path[0] }}')">
+                <span style="font-size: 1.5rem; line-height: 1; color: #fff;">✖</span>
             </div>
-</div>
+        </div>
+    </div>
     {% endfor %}
 
 
-<br/>
+    <br/>
 </div>
+
+<script>
+function deleteImage(path) {
+  fetch('/home', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+      action: 'Delete',
+      path: path
+    })
+  })
+  .then(response => {
+    if (response.ok) {
+      console.log(`Deleted image at ${path}`);
+      setTimeout(() => {
+        location.reload(); // Reload the page after a short delay
+      }, 500); // Delay for 500 milliseconds (0.5 seconds)
+    } else {
+      console.log(`Error deleting image at ${path}`);
+    }
+  })
+  .catch(error => console.error(error));
+}
+
+</script>
 {% endblock %}

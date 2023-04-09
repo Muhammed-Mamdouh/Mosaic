@@ -1,7 +1,5 @@
 import glob
-import sys
-
-from PIL import Image
+from PIL import Image, ImageFilter
 from scipy import spatial
 import numpy as np
 import pickle
@@ -44,27 +42,6 @@ def read_all_tiles(conf, session):
 
     return tiles
 
-# def resize_tile(file, conf, session):
-#     if 'jpg' in file.lower() or 'jpeg' in file.lower():
-#         if " " in file:
-#             os.rename(file, file.replace(" ", ""))
-#         file = file.replace(" ", "")
-#         image_path = file.split('/')[-1].split('\\')[-1]
-#         tile_path = (conf.resized_tiles_photo_dir + image_path).replace('\\', '/')
-#
-#         tile = Image.open(file)
-#         tile = tile.resize((conf.tile_width, conf.tile_height))
-#
-#         # Calculate dominant color
-#         mean_color = np.array(tile).mean(axis=0).mean(axis=0)
-#
-#         if mean_color.shape == (3,):
-#             re_tile = Tile(resized_tile_path=tile_path, color=tuple(mean_color), tile_pickle = pickle.dumps(tile))
-#             tile.save(tile_path)
-#             session.add(re_tile)
-#             return mean_color
-#     else:
-#         os.remove(file)
 
 def make_tree(conf):
     colors = Tile.query.with_entities(Tile.color).all()
@@ -89,8 +66,26 @@ def prepare_tiles(conf, session):
 
 def make_image(main_photo_obj, conf, tree, tiles, paths):
     main_photo_path = main_photo_obj.main_photo_path
+    tile_size = (conf.tile_width, conf.tile_height)
     main_photo = Image.open(main_photo_path)
     main_photo_obj.main_photo_width, main_photo_obj.main_photo_height = (main_photo.width, main_photo.height)
+    closest_paths, main_photo, output = create_mosaic(conf, main_photo, paths, tile_size, tiles, tree)
+    # Make main image the same size as output and get their avg
+    main_photo = main_photo.resize(output.size)
+    # output = output.filter(ImageFilter.GaussianBlur(1))
+
+    output = 0.6 * np.array(output) + 0.4 * np.array(main_photo)
+    # Save output
+    output_path = conf.output_photo_dir + "output_" + main_photo_path.replace("\\", '/').split('/')[-1]
+    plt.imsave(output_path, output / 255)
+
+    main_photo_obj.closest_paths = pickle.dumps(closest_paths)
+    main_photo_obj.output_photo_path = output_path
+
+    return main_photo_obj
+
+
+def create_mosaic(conf, main_photo, paths, tile_size, tiles, tree):
     width, height = main_photo.width, main_photo.height
     aspect_ratio = height / width
     new_width = 2000
@@ -98,7 +93,6 @@ def make_image(main_photo_obj, conf, tree, tiles, paths):
     new_height = int(new_width * aspect_ratio)
     main_photo = main_photo.resize((new_width, new_height), Image.ANTIALIAS)
     main_photo_size = main_photo.size
-    tile_size = (conf.tile_width, conf.tile_height)
     width = int(np.round(main_photo.size[0] // tile_size[0]))
     height = int(np.round(main_photo.size[1] // tile_size[1]))
     resized_photo = main_photo.resize((width, height))
@@ -114,7 +108,6 @@ def make_image(main_photo_obj, conf, tree, tiles, paths):
                 closest = random.choice(closestk[1])
             closest_tiles[i, j] = closest
             closest_paths[i, j] = paths[closest]
-
     # Create an output image
     output = Image.new('RGB', (tile_size[0] * width, tile_size[1] * height))
     # Draw tiles
@@ -126,20 +119,7 @@ def make_image(main_photo_obj, conf, tree, tiles, paths):
             index = closest_tiles[i, j]
             # Draw tile
             output.paste(tiles[index], (x, y))
-    # Make main image the same size as output and get their avg
-    main_photo = main_photo.resize(output.size)
-
-    output = 0.4 * np.array(output) + 0.6 * np.array(main_photo)
-    # Save output
-    output_path = conf.output_photo_dir + "output_" + main_photo_path.replace("\\", '/').split('/')[-1]
-    plt.imsave(output_path, output / 255)
-
-
-    main_photo_obj.closest_paths = pickle.dumps(closest_paths)
-    main_photo_obj.output_photo_path = output_path
-
-
-    return main_photo_obj
+    return closest_paths, main_photo, output
 
 
 def make_all_images(conf, session):

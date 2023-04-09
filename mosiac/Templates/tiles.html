@@ -4,48 +4,53 @@ Tiles Page
 {% endblock %}
 {% block content %}
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-s6p0zvNzOwDDpHx1xjDg/1Q/kX9CfL8jBOzG+MWKj2sV7wWjDjxVxgHJtPcXtKj8p1FJLkzTgjK05yRl8obPfg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+      integrity="sha512-s6p0zvNzOwDDpHx1xjDg/1Q/kX9CfL8jBOzG+MWKj2sV7wWjDjxVxgHJtPcXtKj8p1FJLkzTgjK05yRl8obPfg=="
+      crossorigin="anonymous" referrerpolicy="no-referrer"/>
 
 <!--header-->
 <h1 align="center">Tiles Page</h1>
 
 <form method="POST" action="{{ url_for('tile_page') }}">
-  <button type="submit" name="action" value="Update Tree" class="btn btn-primary">Update Tree</button>
+    <button type="submit" name="action" value="Update Tree" class="btn btn-primary">Update Tree</button>
 </form>
 <div align="center" style="grid-template-columns: repeat(6,1fr);display: grid;vertical-align:middle">
 
 
     <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;min-width: 0;">
-            <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
-        <form action = "/tiles" method = "post" enctype="multipart/form-data">
-        <input type="file" id="files" name="files[]" multiple>
-        <input type = "submit" name="action" value="Upload">
-    </form>
-            </div>
-</div>
+        <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
+            <form action="/tiles" method="post" enctype="multipart/form-data">
+                <label for="files">Select files:</label>
+                <input type="file" id="files" name="files[]" multiple>
+                <input type="submit" name="action" value="Upload">
+            </form>
+        </div>
+    </div>
 
 
     {% for path in tile_photos%}
-        <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;">
+    <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;">
 
-            <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
+        <div style="position: relative;top:50%;left:50%;-webkit-transform: translate(-50%, -50%);">
 
-        <a href={{url_for('tile_image_page',n=path[0])}} target="_blank" style="opacity: 100%;padding:10px;vertical-align:middle">
+            <a href={{url_for('tile_image_page',n=path[0])}} target="_blank"
+               style="opacity: 100%;padding:10px;vertical-align:middle">
 
-            <img src={{path[1]}} style="min-width: 0;max-width: 90%;width:90%;opacity: 100%;">
+                <img src={{path[1]}} style="min-width: 0;max-width: 90%;width:90%;opacity: 100%;">
 
-        </a>
-                <div style="position: absolute; top: 5px; right: 5px; color: #fff; font-size: 1.5rem; cursor: pointer;" onclick="deleteImage('{{ path[0] }}')">
-          <span style="font-size: 1.5rem; line-height: 1;">✖</span>
-        </div>
-
+            </a>
+            <div style="position: absolute; top: 5px; right: 5px; color: #fff; font-size: 1.5rem; cursor: pointer;"
+                 onclick="deleteImage('{{ path[0] }}')">
+                <span style="font-size: 1.5rem; line-height: 1;">✖</span>
             </div>
 
-</div>
+        </div>
+
+    </div>
     {% endfor %}
 
 
-<br/>
+    <br/>
 </div>
 
 
@@ -73,6 +78,7 @@ function deleteImage(path) {
   })
   .catch(error => console.error(error));
 }
+
 </script>
 
 {% endblock %}
