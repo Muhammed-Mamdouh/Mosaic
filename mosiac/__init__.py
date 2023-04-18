@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import os
+from flask_ngrok import run_with_ngrok
 
 import random
 import pickle
@@ -17,18 +18,19 @@ app = Flask(__name__,template_folder='Templates',static_folder='static')
 app.config['SECRET_KEY'] = 'your_secret_key_here'
 app.config['FLASH_MESSAGES'] = True
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
+# run_with_ngrok(app)
 
 db = SQLAlchemy(app)
 
 from mosiac.models import *
-from mosiac.processing import make_all_images, prepare_tiles, make_image, dump_to_pickle, read_all_tiles, read_tile, make_tree
+from mosiac.processing import make_all_images, prepare_tiles, make_image, dump_to_pickle, read_tile, make_tree
 
 
 with app.app_context():
     db.create_all()
 
 if start_over:
-    conf = Configuration(main_photo_dir=r"mosiac/static/main_images/*", tiles_photo_dir=r"mosiac/static/tiles/", resized_tiles_photo_dir = r"mosiac/static/oj_tiles/", k=4, tile_width=20, tile_height=20, output_photo_dir=r"mosiac/static/output_images/", id=1)
+    conf = Configuration(main_photo_dir=r"mosiac/static/main_images/*", tiles_photo_dir=r"mosiac/static/tiles/", k=4, tile_size=10, search_size=5, mixing_ratio=0.6, final_width=1000, output_photo_dir=r"mosiac/static/output_images/", id=1)
 else:
     with app.app_context():
         conf = Configuration.query.first()
@@ -61,17 +63,9 @@ if start_over:
         session.add(conf)
         prepare_tiles(conf,session)
 
-        tiles = read_all_tiles(conf, session)
-        conf.tiles = pickle.dumps(tiles)
-
         make_all_images(conf, session)
         session.commit()
         print(Configuration.query.all())
-# dump_to_pickle(main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names, tiles, tree, paths, original_paths)
-
-# with open('./dataPickle', 'rb') as f:
-#     main_photo_paths, widths, heights, tile_sizes, closest_paths_list, main_photo_sizes, output_names, tiles, tree, paths, original_paths = pickle.load(f)
-
 
 from mosiac import routes
 

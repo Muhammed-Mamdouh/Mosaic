@@ -3,6 +3,8 @@ from mosiac import app, db, Configuration, MainImage, Tile, make_image, read_til
 from flask import render_template, request, redirect, url_for, flash
 import pickle
 import numpy as np
+import uuid
+import itertools
 
 
 # Helper methods
@@ -15,24 +17,36 @@ def delete_image(ID):
         db.session.delete(mainImage)
         db.session.commit()
 
+def is_jpg(file_name):
+    return ('.jpg' in file_name.lower()) or ('.jpeg' in file_name.lower())
+
+def get_tile_pickle(size):
+    if size == 10:
+        return Tile.tile_pickle_10
+    elif size == 15:
+        return Tile.tile_pickle_15
+    else:
+        return Tile.tile_pickle_20
 
 def Upload_main_images(files):
     if files[0].filename:
         conf = Configuration.query.filter_by(id=1).first()
+
         paths, tiles = list(
-            zip(*Tile.query.with_entities(Tile.resized_tile_path, Tile.tile_pickle).all()))
+            zip(*Tile.query.with_entities(Tile.tile_path, get_tile_pickle(conf.tile_size)).all()))
         paths = np.array(paths)
         tiles = np.array([pickle.loads(tile) for tile in tiles])
         for f in files:
-            main_photo_path = conf.main_photo_dir[:-1] + f.filename
-            f.save(conf.main_photo_dir[:-1] + f.filename)
-            main_photo_obj = MainImage(main_photo_path=main_photo_path)
-            with app.app_context():
-                session = db.session
-                tree = pickle.loads(conf.tree)
-                main_photo_obj = make_image(main_photo_obj, conf, tree, tiles, paths)
-                session.add(main_photo_obj)
-                session.commit()
+            if is_jpg(f.filename):
+                main_photo_path = conf.main_photo_dir[:-1] + str(uuid.uuid4()) + '.' + f.filename.split('.')[-1]
+                f.save(main_photo_path)
+                main_photo_obj = MainImage(main_photo_path=main_photo_path)
+                with app.app_context():
+                    session = db.session
+                    tree = pickle.loads(conf.tree)
+                    main_photo_obj = make_image(main_photo_obj, conf, tree, tiles, paths)
+                    session.add(main_photo_obj)
+                    session.commit()
 
 
 def upload_tiles(files):
@@ -50,7 +64,6 @@ def delete_tile(ID):
     with app.app_context():
         tile = Tile.query.filter_by(id=ID).first()
         os.remove(tile.tile_path)
-        os.remove(tile.resized_tile_path)
         db.session.delete(tile)
         db.session.commit()
 
@@ -62,10 +75,10 @@ def update_tree():
         make_tree(conf)
         session.commit()
 
+
 def get_next_prev(n):
     all_ids = MainImage.query.with_entities(MainImage.id).all()
     all_ids_sorted = sorted(list(*zip(*all_ids)))
-    print(all_ids_sorted)
     if n in all_ids_sorted:
         idx = all_ids_sorted.index(n)
         next_idx = idx + 1
@@ -105,21 +118,14 @@ def grid_page(n):
     n = int(n)
     main_photo_obj = MainImage.query.filter_by(id=n).first()
     prev_n, next_n = get_next_prev(n)
-    print(prev_n, next_n)
     if main_photo_obj:
         output_name = r"../"+'/'.join(main_photo_obj.output_photo_path.replace(r'\\','/').split('/')[1:])
-        closest_paths = pickle.loads(main_photo_obj.closest_paths)
-        closest_objects = closest_paths.copy()[:, :]
-        w, h = closest_objects.shape
+        w, h = main_photo_obj.n_tiles_width, main_photo_obj.n_tiles_height
+        closest_objects = np.empty((w, h), dtype='object')
         max_width = str(100/w)+"%"
         max_height = str(100 / h) + "%"
-        l = 0
-        for i in range(closest_paths.shape[0]):
-            m = 0
-            for j in range(closest_paths.shape[1]):
-                closest_objects[i,j] = (1,n,l,m)
-                m += 1
-            l += 1
+        for col, row in itertools.product(range(w), range(h)):
+            closest_objects[col, row] = (n, col, row)
 
         return render_template('grid.html',data=closest_objects,max_width=max_width,max_height=max_height,output_name=output_name, prev=prev_n, next=next_n)
     else:
@@ -131,10 +137,7 @@ def image_page(n, l, m):
     n = int(n)
     main_photo_obj = MainImage.query.filter_by(id=n).first()
     raw = pickle.loads(main_photo_obj.closest_paths)[int(l), int(m)]
-    conf = Configuration.query.get(1)
-    resized_tiles_photo_dir = '/'.join(conf.resized_tiles_photo_dir.split('/')[1:])
-    tiles_photo_dir = '/'.join(conf.tiles_photo_dir.split('/')[1:])
-    path = r"../../"+'/'.join(raw.replace(r'\\','/').split('/')[1:]).replace(resized_tiles_photo_dir, tiles_photo_dir)
+    path = r"../../"+'/'.join(raw.replace(r'\\','/').split('/')[1:])
     return render_template('image.html', path=path)
 
 
@@ -178,13 +181,10 @@ def edit_configuration():
 def update_configuration():
     with app.app_context():
         config = Configuration.query.get(1)
-        config.main_photo_dir = request.form['main_photo_dir']
-        config.tiles_photo_dir = request.form['tiles_photo_dir']
-        config.resized_tiles_photo_dir = request.form['resized_tiles_photo_dir']
         config.k = int(request.form['k'])
-        config.tile_width = int(request.form['tile_width'])
-        config.tile_height = int(request.form['tile_height'])
-        config.output_photo_dir = request.form['output_photo_dir']
+        config.tile_size = int(request.form['tile_size'])
+        config.mixing_ratio = float(request.form['mixing_ratio'])
+        config.final_width = int(request.form['final_width'])
 
         db.session.commit()
     flash('Configuration updated successfully!', 'success')

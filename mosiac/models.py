@@ -34,22 +34,23 @@ class Configuration(db.Model):
     id = db.Column(db.Integer, primary_key=True,autoincrement=True)
     main_photo_dir = db.Column(db.String)
     tiles_photo_dir = db.Column(db.String)
-    resized_tiles_photo_dir = db.Column(db.String)
     k = db.Column(db.Integer)
-    tile_width = db.Column(db.Integer)
-    tile_height = db.Column(db.Integer)
+    tile_size = db.Column(db.Integer)
     output_photo_dir = db.Column(db.String)
-    tiles_pickle = db.Column(db.PickleType)
     tree = db.Column(db.PickleType)
     tiles = db.Column(db.PickleType)
+    search_size = db.Column(db.Integer)
+    mixing_ratio = db.Column(db.Float)
+    final_width = db.Column(db.Integer)
 
 
 class Tile(db.Model):
     id = db.Column(db.Integer, primary_key=True,autoincrement=True)
     tile_path = db.Column(db.String)
-    resized_tile_path = db.Column(db.String)
-    color = db.Column(TupleType)
-    tile_pickle = db.Column(db.PickleType)
+    tile_pickle_10 = db.Column(db.PickleType)
+    tile_pickle_15 = db.Column(db.PickleType)
+    tile_pickle_20 = db.Column(db.PickleType)
+    search_tile = db.Column(db.PickleType)
 
 
 
@@ -60,4 +61,7 @@ class MainImage(db.Model):
     main_photo_width = db.Column(db.Float)
     main_photo_height = db.Column(db.Float)
     closest_paths = db.Column(db.PickleType)
+    n_tiles_width = db.Column(db.Integer)
+    n_tiles_height = db.Column(db.Integer)
+
 

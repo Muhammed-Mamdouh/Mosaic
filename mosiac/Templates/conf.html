@@ -15,31 +15,39 @@ Settings Page
     <div style="padding:10px;margin:10px;vertical-align:middle;background-color: #414141;min-width: 0;">
 
         <form method="post" action="/update_configuration">
-      <label for="main_photo_dir">Main Photo Directory:</label>
-      <input type="text" name="main_photo_dir" value="{{ config.main_photo_dir }}"><br>
 
-      <label for="tiles_photo_dir">Tiles Photo Directory:</label>
-      <input type="text" name="tiles_photo_dir" value="{{ config.tiles_photo_dir }}"><br>
+            <label for="k">K</label><br>
+            <input type="number" name="k" value="{{ config.k }}"><br><br>
 
-      <label for="resized_tiles_photo_dir">Resized Tiles Photo Directory:</label>
-      <input type="text" name="resized_tiles_photo_dir" value="{{ config.resized_tiles_photo_dir }}"><br>
+            <label for="final_width">Final Width</label><br>
+            <input type="number" name="final_width" value="{{ config.final_width }}"><br><br>
 
-      <label for="k">K:</label>
-      <input type="number" name="k" value="{{ config.k }}"><br>
+            <label for="mixing_ratio">Mixing Ratio</label><br>
+            <input type="number" step="0.01" name="mixing_ratio" value="{{ config.mixing_ratio }}"><br><br>
 
-      <label for="tile_width">Tile Width:</label>
-      <input type="number" name="tile_width" value="{{ config.tile_width }}"><br>
+            <label for="tile_size">Tile Width</label><br>
+<!--            <input type="number" name="tile_size" value="{{ config.tile_size }}"><br><br>-->
 
-      <label for="tile_height">Tile Height:</label>
-      <input type="number" name="tile_height" value="{{ config.tile_height }}"><br>
-
-      <label for="output_photo_dir">Output Photo Directory:</label>
-      <input type="text" name="output_photo_dir" value="{{ config.output_photo_dir }}"><br>
+            <select id="tile_size" name="tile_size">
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+            </select>
 
 
+            <br/><br><br>
 
-      <input type="submit" value="Save Changes">
-    </form>
+
+            <input type="submit" value="Save Changes">
+        </form>
     </div>
 </div>
+
+<script>
+    const selectedSize = "{{ config.tile_size }}";
+    const tileSizeDropdown = document.getElementById("tile_size");
+    tileSizeDropdown.value = selectedSize;
+  </script>
+
 {% endblock %}
+
