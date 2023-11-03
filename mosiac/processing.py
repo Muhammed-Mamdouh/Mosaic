@@ -92,10 +92,7 @@ def create_mosaic(conf, main_photo, paths, tile_size, tiles, tree):
             # Offset of tile
             x, y = i * conf.search_size, j * conf.search_size
             closestk = tree.query(resized_photo[y: y + conf.search_size, x: x + conf.search_size, :].flatten(), k=conf.k)
-            if conf.k == 1:
-                closest = closestk[1]
-            else:
-                closest = random.choice(closestk[1])
+            closest = closestk[1] if conf.k == 1 else random.choice(closestk[1])
             closest_tiles[i, j] = closest
             closest_paths[i, j] = paths[closest]
 
